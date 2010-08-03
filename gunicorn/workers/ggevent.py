@@ -3,7 +3,6 @@
 # This file is part of gunicorn released under the MIT license. 
 # See the NOTICE for more information.
 
-from __future__ import with_statement
 
 import os
 
@@ -76,8 +75,12 @@ class GeventWorker(AsyncWorker):
         except:
             pass
 
-        with gevent.Timeout(self.timeout, False):
+        timeout = gevent.Timeout(self.timeout, False)
+        try:
+            timeout.start()
             gevent.spawn(server.stop).join()
+        finally:
+            timeout.cancel()
 
     def init_process(self):
         #gevent doesn't reinitialize dns for us after forking
@@ -125,9 +128,12 @@ class GeventBaseWorker(Worker):
                 gevent.sleep(0.1) 
         except KeyboardInterrupt:
             pass
-      
-        with gevent.Timeout(self.timeout, False):
+        timeout = gevent.Timeout(self.timeout, False)
+        try:
+            timeout.start()
             gevent.spawn(server.stop).join()
+        finally:
+            timeout.cancel()
 
 class WSGIHandler(wsgi.WSGIHandler):
     def log_request(self, *args):

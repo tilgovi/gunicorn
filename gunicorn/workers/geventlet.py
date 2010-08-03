@@ -3,8 +3,6 @@
 # This file is part of gunicorn released under the MIT license. 
 # See the NOTICE for more information.
 
-from __future__ import with_statement
-
 import errno
 import socket
 
@@ -73,6 +71,12 @@ class EventletWorker(AsyncWorker):
         except KeyboardInterrupt:
             pass
 
-        with eventlet.Timeout(self.timeout, False):
-            eventlet.kill(acceptor, eventlet.StopServe)
+        timeout = eventlet.Timeout(self.timeout, False)
+        try:
+            try:
+                pool.waitall()
+            except eventlet.Timeout:
+                pass
+        finally:
+            timeout.cancel()
 
