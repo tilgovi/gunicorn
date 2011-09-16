@@ -65,9 +65,10 @@ class GeventWorker(AsyncWorker):
         self.socket.setblocking(1)
 
         pool = Pool(self.worker_connections)
+        self.cleanup = pool.join
+
         server = GGeventServer(self.socket, self.handle, spawn=pool,
                 worker=self)
-
         server.start()
         try:
             while self.alive:
@@ -81,12 +82,9 @@ class GeventWorker(AsyncWorker):
         except KeyboardInterrupt:
             pass
 
-        try:
-            # Try to stop connections until timeout
-            self.notify()
-            server.stop(timeout=self.timeout)
-        except:
-            pass
+        # kill the server without join()'ing the pool
+        # existing connections can shut down gracefully
+        server.kill()
 
     def handle_request(self, *args):
         try:
@@ -102,7 +100,6 @@ class GeventWorker(AsyncWorker):
             gevent.core.dns_shutdown(fail_requests=1)
             gevent.core.dns_init()
             super(GeventWorker, self).init_process()
-
 
 class GeventBaseWorker(Worker):
     """\
