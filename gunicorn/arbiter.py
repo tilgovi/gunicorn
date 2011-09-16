@@ -463,10 +463,13 @@ class Arbiter(object):
         finally:
             self.log.info("Worker exiting (pid: %s)", worker_pid)
             try:
-                worker.tmp.close()
                 self.cfg.worker_exit(self, worker)
             except:
                 pass
+            finally:
+                worker.tmp.close()
+                if hasattr(worker, 'cleanup'):
+                    worker.cleanup()
 
     def spawn_workers(self):
         """\
@@ -500,9 +503,10 @@ class Arbiter(object):
             if e.errno == errno.ESRCH:
                 try:
                     worker = self.WORKERS.pop(pid)
-                    worker.tmp.close()
                     self.cfg.worker_exit(self, worker)
                     return
                 except (KeyError, OSError):
                     return
+                finally:
+                    worker.tmp.close()
             raise            
