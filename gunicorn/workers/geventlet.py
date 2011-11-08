@@ -33,9 +33,9 @@ class EventletWorker(AsyncWorker):
         return eventlet.Timeout(self.cfg.keepalive, False) 
 
     def run(self):
-        self.socket = GreenSocket(family_or_realsock=self.socket.sock)
-        self.socket.setblocking(1)
-        self.acceptor = eventlet.spawn(eventlet.serve, self.socket,
+        socket = GreenSocket(family_or_realsock=self.socket.sock)
+        socket.setblocking(1)
+        acceptor = eventlet.spawn(eventlet.serve, socket,
                 self.handle, self.worker_connections)
 
         while self.alive:
@@ -48,4 +48,4 @@ class EventletWorker(AsyncWorker):
 
         self.notify()
         with eventlet.Timeout(self.timeout, False):
-            eventlet.kill(self.acceptor, eventlet.StopServe)
+            eventlet.kill(acceptor, eventlet.StopServe)
