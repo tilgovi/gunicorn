@@ -37,6 +37,7 @@ class EventletWorker(AsyncWorker):
         socket.setblocking(1)
         acceptor = eventlet.spawn(eventlet.serve, socket,
                 self.handle, self.worker_connections)
+        self.cleanup = acceptor.wait
 
         while self.alive:
             self.notify()
@@ -47,5 +48,6 @@ class EventletWorker(AsyncWorker):
             eventlet.sleep(1.0)
 
         self.notify()
-        with eventlet.Timeout(self.timeout, False):
-            eventlet.kill(acceptor, eventlet.StopServe)
+        # kill the server without wait()'ing on the pool
+        # existing connections can shutdown gracefully
+        eventlet.kill(acceptor, eventlet.StopServe)
