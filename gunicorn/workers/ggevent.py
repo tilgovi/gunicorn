@@ -82,6 +82,7 @@ class GeventWorker(AsyncWorker):
         except KeyboardInterrupt:
             pass
 
+        self.notify()
         # kill the server without join()'ing the pool
         # existing connections can shut down gracefully
         server.kill()
