@@ -41,7 +41,8 @@ class SyncWorker(base.Worker):
                 continue
 
             except socket.error, e:
-                if e[0] not in (errno.EAGAIN, errno.ECONNABORTED):
+                if e[0] not in (errno.EAGAIN, errno.ECONNABORTED,
+                                errno.EWOULDBLOCK):
                     raise
 
             # If our parent changed then we shut down.
